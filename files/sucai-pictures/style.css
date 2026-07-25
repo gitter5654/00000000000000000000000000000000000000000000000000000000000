@@ -1,14 +1,14 @@
 body {
   font-family: "Helvetica Neue", sans-serif;
   font-size: 150%;
-  background-color: #ff1c1c;
+  background-color: #7D765A;
   color: #333;
   margin: 0;
   padding: 0;
 }
 
 header {
-  background-color: #ff1c1c;
+  background-color: #7D765A;
   color: #ffea4f;
   padding: 2rem;
   text-align: center;
@@ -38,7 +38,7 @@ h2 {
 }
 
 .file-list li:hover {
-  background: #eaf6ff;
+  background: #7D765A;
 }
 
 .file-list a {
@@ -50,6 +50,6 @@ h2 {
 footer {
   text-align: center;
   padding: 1rem;
-  background-color: #ecf0f1;
+  background-color: #7D765A;
   font-size: 0.9rem;
 }
