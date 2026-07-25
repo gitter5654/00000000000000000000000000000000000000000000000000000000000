@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MC部分物品合成表(1.8.8)</title>
+    
+    <!-- 1. 引入 GitHub Markdown 樣式 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown-light.min.css">
+    
+    <style>
+        body {
+            background-color: #f6f8fa;
+            padding: 40px;
+        }
+        /* 新增导航列表样式 */
+        .md-nav {
+            max-width: 980px;
+            margin: 0 auto 20px;
+            padding: 20px;
+            background-color: #ffffff;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+        }
+        .md-nav h3 {
+            margin-top: 0;
+            color: #24292f;
+        }
+        .md-nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .md-nav .md-item {
+            padding: 8px 16px;
+            background-color: #f6f8fa;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #0969da;
+            text-decoration: none;
+        }
+        .md-nav .md-item:hover {
+            background-color: #ddf4ff;
+            border-color: #0969da;
+        }
+        .md-nav .md-item.active {
+            background-color: #0969da;
+            color: #ffffff;
+            border-color: #0969da;
+        }
+        /* 限制渲染區域的最大寬度並置中，模擬文章排版 */
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+            background-color: #ffffff;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+        }
+        @media (max-width: 767px) {
+            body {
+                padding: 15px;
+            }
+            .markdown-body {
+                padding: 15px;
+            }
+            .md-nav ul {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 新增MD文件选择导航列表 -->
+    <nav class="md-nav">
+        <h3>选择类别</h3>
+        <ul id="mdList">
+            <!-- 你可以在这里自由扩展更多MD文件项 -->
+            <li class="md-item" data-path="https://raw.githubusercontent.com/touses/touses.github.io/refs/heads/master/_posts/2026-07-24-%E7%A4%BA%E4%BE%8B%E6%96%87%E4%BB%B6.md">示例文件</li>
+            <li class="md-item" data-path="基礎物品.md">基础物品</li>
+            <li class="md-item" data-path="工具武器.md">工具武器</li>
+            <li class="md-item" data-path="機關機械.md">机关机械</li>
+            <li class="md-item" data-path="裝甲防具.md">装甲防具</li>
+            <li class="md-item" data-path="運輸交通.md">运输交通</li>
+            <li class="md-item" data-path="食物雜項.md">食物杂项</li>
+        </ul>
+    </nav>
+
+    <!-- 渲染目標容器 -->
+    <article id="content" class="markdown-body">載入中...</article>
+
+    <!-- 3. 引入 DOMPurify (XSS 安全過濾) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+   <!-- 2. 引入 Marked.js (Markdown 解析) -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    
+    <!-- 4. 設定與引入 MathJax (數學公式) -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\$', '\$']],
+                displayMath: [['$$', '$$'], ['\$', '\$']]
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+    <!-- 5. 核心 JavaScript：點擊對應項渲染指定md檔案 -->
+    <script>
+        async function loadAndRenderMarkdown(filePath) {
+            try {
+                // 使用 Fetch API 讀取目錄下的 md 文件
+                const response = await fetch(filePath);
+                if (!response.ok) {
+                    throw new Error(`無法載入檔案: ${response.statusText}`);
+                }
+                const markdownText = await response.text();
+
+                // 步驟 A：將 Markdown 轉為 HTML
+                const rawHtml = marked.parse(markdownText);
+
+                // 步驟 B：使用 DOMPurify 過濾惡意程式碼
+                const cleanHtml = DOMPurify.sanitize(rawHtml);
+
+                // 步驟 C：將結果放入畫面上
+                const container = document.getElementById('content');
+                container.innerHTML = cleanHtml;
+
+                // 步驟 D：觸發 MathJax 重新掃描並渲染數學公式
+                if (window.MathJax && window.MathJax.typesetPromise) {
+                    window.MathJax.typesetPromise([container]).catch((err) => console.log(err));
+                }
+
+            } catch (error) {
+                document.getElementById('content').innerHTML = `<p style="color: red;">發生錯誤: ${error.message}</p>`;
+            }
+        }
+
+        // 綁定列表點擊事件
+        const mdItems = document.querySelectorAll('.md-item');
+        mdItems.forEach(item => {
+            item.addEventListener('click', () => {
+                // 清除所有項目的激活狀態
+                mdItems.forEach(i => i.classList.remove('active'));
+                // 給當前點擊的項目加上激活樣式
+                item.classList.add('active');
+                // 獲取對應的md文件路徑並載入渲染
+                const targetPath = item.getAttribute('data-path');
+                loadAndRenderMarkdown(targetPath);
+            })
+        })
+
+        // 預設載入第一個MD文件
+        mdItems.click();
+    </script>
+    <footer>
+        <p>&copy; Czy | 本站托管于 GitHub Pages</p>
+    </footer>
+</body>
+</html>
