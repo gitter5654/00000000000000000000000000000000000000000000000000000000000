@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>朝花夕拾 鲁迅 著</title>
-    <!-- 1. 引入 Turnstile JS，绑定全局加载回调 -->
+    <!-- 1. 引入 Turnstile JS，强制绑定全局加载回调 -->
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileLoad" async defer></script>
 </head>
 <body>
@@ -12,12 +12,12 @@
     <!-- 你的图片标签 -->
     <img data-uuid="4a1d85b5-b729-4e7b-9933-ac33d828a52d.jpg" class="secure-img" alt="鲁迅肖像" style="min-height:50px; background:#f0f0f0; display:block; margin:10px 0;">
 
-    <!-- 2. 🔴 核心修正：绝不能用 display:none！改用官方认可的离屏隐藏方式 -->
+    <!-- 2. 核心修正：绝不能用 display:none！改用官方认可的离屏隐藏方式 -->
     <div id="turnstile-container" style="position: absolute; left: -9999px; top: -9999px; opacity: 0; pointer-events: none;"></div>
 
     <script>
     const WORKER_HOST = "https://mitc.1976473.xyz"; // 你的 CF Workers 域名
-    const SITE_KEY = "0x4AAAAAADy-SV9SdOgpvt36";                   // 你申请到的公开 Sitekey
+    const SITE_KEY = "0x4AAAAAADy-SV9SdOgpvt36";   // 你申请到的公开 Sitekey
 
     console.log("页面已加载_等待Turnstile脚本初始化");
 
@@ -30,15 +30,13 @@
         try {
             turnstile.render('#turnstile-container', {
                 sitekey: SITE_KEY,
-                // 如果你的 Sitekey 在 CF 后台选的是 "Invisible"（隐式），这里可以填 "invisible"
                 appearance: "always", 
                 callback: function(turnstileToken) {
                     console.log("Turnstile验证成功_拿到Token", turnstileToken.substring(0, 20) + "...");
-                    // 拿着 Token 去并发请求所有图片
                     loadAllImages(turnstileToken);
                 },
                 'error-callback': function(error) {
-                    console.error('Turnstile验证器内部发生错误_可能Sitekey不匹配或域名未授权_错误信息', error);
+                    console.error('Turnstile验证器内部发生错误', error);
                 },
                 'expired-callback': function() {
                     console.warn('TurnstileToken已过期_正在尝试重新验证');
@@ -62,7 +60,6 @@
             if (!uuid) return;
 
             try {
-                console.log(`[图片 ${index + 1}] 正在向Worker请求 ${uuid}`);
                 const response = await fetch(`${WORKER_HOST}/get-img-token`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -71,11 +68,9 @@
 
                 if (response.ok) {
                     const data = await response.json();
-                    console.log(`[图片 ${index + 1}] Worker验证通过_已拿到短效链接`);
-                    // 拼接最终 URL
                     img.src = `${WORKER_HOST}/img/${uuid}?token=${data.token}&expires=${data.expires}`;
                 } else {
-                    console.error(`[图片 ${index + 1}] Worker拒绝了请求_状态码: ${response.status}_请检查Worker后台日志`);
+                    console.error(`[图片 ${index + 1}] Worker拒绝了请求_状态码: ${response.status}`);
                 }
             } catch (err) {
                 console.error(`[图片 ${index + 1}] 请求网络异常`, err);
@@ -86,7 +81,7 @@
     }
     </script>
     
-    <!-- 1. 引入 GitHub Markdown 樣式 -->
+    <!-- 1. 引入 GitHub Markdown 样式 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown-light.min.css">
     
     <style>
@@ -94,7 +89,7 @@
             background-color: #f6f8fa;
             padding: 40px;
         }
-        /* 新增导航列表样式 */
+        /* 替换列表为输入框搜索栏样式 */
         .md-nav {
             max-width: 980px;
             margin: 0 auto 20px;
@@ -102,39 +97,43 @@
             background-color: #ffffff;
             border: 1px solid #d0d7de;
             border-radius: 6px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
         }
         .md-nav h3 {
-            margin-top: 0;
-            color: #24292f;
-        }
-        .md-nav ul {
-            list-style: none;
-            padding: 0;
             margin: 0;
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
+            color: #24292f;
+            font-size: 16px;
+            white-space: nowrap;
         }
-        .md-nav .md-item {
-            padding: 8px 16px;
-            background-color: #f6f8fa;
+        .md-nav input[type="text"] {
+            flex: 1;
+            padding: 8px 12px;
             border: 1px solid #d0d7de;
             border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-            color: #0969da;
-            text-decoration: none;
+            font-size: 14px;
+            outline: none;
         }
-        .md-nav .md-item:hover {
-            background-color: #ddf4ff;
+        .md-nav input[type="text"]:focus {
             border-color: #0969da;
+            box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.3);
         }
-        .md-nav .md-item.active {
-            background-color: #0969da;
+        .md-nav button {
+            padding: 8px 16px;
+            background-color: #238636;
             color: #ffffff;
-            border-color: #0969da;
+            border: 1px solid rgba(27, 31, 35, 0.15);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.2s;
         }
-        /* 限制渲染區域的最大寬度並置中，模擬文章排版 */
+        .md-nav button:hover {
+            background-color: #2ea043;
+        }
+        /* 限制渲染区域的最大宽度并置中 */
         .markdown-body {
             box-sizing: border-box;
             min-width: 200px;
@@ -152,38 +151,36 @@
             .markdown-body {
                 padding: 15px;
             }
-            .md-nav ul {
+            .md-nav {
                 flex-direction: column;
+                align-items: stretch;
             }
         }
     </style>
 </head>
 <body>
 
-    <!-- 新增MD文件选择导航列表 -->
+    <!-- 废除列表，改为输入框与按钮 -->
     <nav class="md-nav">
-        <h3>选择类别</h3>
-        <ul id="mdList">
-            <!-- 你可以在这里自由扩展更多MD文件项 -->
-            <li class="md-item" data-path=朝花夕拾.md">朝花夕拾</li>
-        </ul>
+        <h3>跳转到锚点</h3>
+        <input type="text" id="anchorInput" placeholder="请输入要跳转的标题内容 (例如: 鲁迅)">
+        <button id="jumpBtn">跳转</button>
     </nav>
 
-    <!-- 渲染目標容器 -->
+    <!-- 渲染目标容器 -->
     <article id="content" class="markdown-body">載入中...</article>
 
-    <!-- 3. 引入 DOMPurify (XSS 安全過濾) -->
+    <!-- 3. 引入 DOMPurify (XSS 安全过滤) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
-   <!-- 2. 引入 Marked.js (Markdown 解析) -->
+    <!-- 2. 引入 Marked.js (Markdown 解析) -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     
-    
-    <!-- 4. 設定與引入 MathJax (數學公式) -->
+    <!-- 4. 设定与引入 MathJax (数学公式) -->
     <script>
         window.MathJax = {
             tex: {
-                inlineMath: [['$', '$'], ['\$', '\$']],
-                displayMath: [['$$', '$$'], ['\$', '\$']]
+                inlineMath: [['$', '$'], ['\\$', '\\$']],
+                displayMath: [['$$', '$$'], ['\\$', '\\$']]
             },
             svg: {
                 fontCache: 'global'
@@ -192,30 +189,37 @@
     </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 
-    <!-- 5. 核心 JavaScript：點擊對應項渲染指定md檔案 -->
+    <!-- 5. 核心 JavaScript：加载 MD 文件并实现输入关键词跳转到对应锚点 -->
     <script>
-        async function loadAndRenderMarkdown(filePath) {
+        // 定义你要加载的默认 Markdown 文件路径
+        const DEFAULT_MD_PATH = '朝花夕拾.md'; 
+
+        async function loadAndRenderMarkdown(filePath, targetAnchor = '') {
             try {
-                // 使用 Fetch API 讀取目錄下的 md 文件
                 const response = await fetch(filePath);
                 if (!response.ok) {
                     throw new Error(`無法載入檔案: ${response.statusText}`);
                 }
                 const markdownText = await response.text();
 
-                // 步驟 A：將 Markdown 轉為 HTML
+                // 步骤 A：将 Markdown 转为 HTML
                 const rawHtml = marked.parse(markdownText);
 
-                // 步驟 B：使用 DOMPurify 過濾惡意程式碼
+                // 步骤 B：使用 DOMPurify 过滤恶意代码
                 const cleanHtml = DOMPurify.sanitize(rawHtml);
 
-                // 步驟 C：將結果放入畫面上
+                // 步骤 C：将结果放入画面上
                 const container = document.getElementById('content');
                 container.innerHTML = cleanHtml;
 
-                // 步驟 D：觸發 MathJax 重新掃描並渲染數學公式
+                // 步骤 D：触发 MathJax 重新扫描并渲染数学公式
                 if (window.MathJax && window.MathJax.typesetPromise) {
                     window.MathJax.typesetPromise([container]).catch((err) => console.log(err));
+                }
+
+                // 步骤 E：如果指定了跳转的锚点内容，进行滚动定位
+                if (targetAnchor) {
+                    scrollToAnchor(targetAnchor);
                 }
 
             } catch (error) {
@@ -223,22 +227,53 @@
             }
         }
 
-        // 綁定列表點擊事件
-        const mdItems = document.querySelectorAll('.md-item');
-        mdItems.forEach(item => {
-            item.addEventListener('click', () => {
-                // 清除所有項目的激活狀態
-                mdItems.forEach(i => i.classList.remove('active'));
-                // 給當前點擊的項目加上激活樣式
-                item.classList.add('active');
-                // 獲取對應的md文件路徑並載入渲染
-                const targetPath = item.getAttribute('data-path');
-                loadAndRenderMarkdown(targetPath);
-            })
-        })
+        // 查找包含指定文本的标题或元素并滚动过去
+        function scrollToAnchor(keyword) {
+            const container = document.getElementById('content');
+            // 查找所有标题标签 (h1 ~ h6)
+            const headings = container.querySelectorAll('h1, h2, h3, h4, h5, h6');
+            let targetElement = null;
 
-        // 預設載入第一個MD文件
-        mdItems.click();
+            for (let heading of headings) {
+                if (heading.textContent.includes(keyword)) {
+                    targetElement = heading;
+                    break;
+                }
+            }
+
+            if (targetElement) {
+                targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                // 添加高亮闪烁效果提示用户
+                targetElement.style.transition = 'background-color 0.5s';
+                targetElement.style.backgroundColor = '#fff8c5';
+                setTimeout(() => {
+                    targetElement.style.backgroundColor = '';
+                }, 1500);
+            } else {
+                alert(`未找到包含 "${keyword}" 的标题内容！`);
+            }
+        }
+
+        // 绑定按钮点击事件
+        document.getElementById('jumpBtn').addEventListener('click', () => {
+            const keyword = document.getElementById('anchorInput').value.trim();
+            if (!keyword) {
+                alert('请输入要跳转的内容关键词');
+                return;
+            }
+            // 重新加载文件并跳转到指定锚点
+            loadAndRenderMarkdown(DEFAULT_MD_PATH, keyword);
+        });
+
+        // 支持输入框回车触发跳转
+        document.getElementById('anchorInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('jumpBtn').click();
+            }
+        });
+
+        // 页面初次加载时默认渲染第一个 MD 文件
+        loadAndRenderMarkdown(DEFAULT_MD_PATH);
     </script>
     <footer>
         <p>&copy; Czy | 本站托管于 GitHub Pages</p>
