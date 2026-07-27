@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>正紅旗下</title>
+  <style>
+    body { font-family: sans-serif; padding: 15px; margin: 0; line-height: 1.6; }
+    
+    /* 目錄選單（目錄索引）樣式 */
+    #toc-container {
+      background: #f4f4f9;
+      border: 1px solid #ccc;
+      padding: 10px 15px;
+      margin-bottom: 20px;
+      border-radius: 6px;
+    }
+    #toc-container ul { padding-left: 20px; margin: 5px 0; }
+    #toc-container a { color: #0066cc; text-decoration: none; }
+    #toc-container a:hover { text-decoration: underline; }
+
+    /* 錨點跳轉時的平滑滾動與高亮 */
+    html { scroll-behavior: smooth; }
+    :target {
+      background-color: #fff3bf; /* 點擊目錄跳轉時，高亮顯示該 h2 */
+      transition: background-color 0.5s ease;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>正红旗下 老舍 著</h1>
+
+  <!-- 1. 自動生成的目錄區塊 -->
+  <div id="toc-container">
+    <h3>章節索引</h3>
+    <ul id="toc-list"><li>載入中...</li></ul>
+  </div>
+
+  <hr>
+
+  <!-- 2. 跨域 HTML 渲染容器 -->
+  <div id="content-container">文章載入中...</div>
+
+  <script>
+    async function loadAndIndexHtml() {
+      // 設定你要抓取的目標網站 URL
+      
+      // 使用方案四：CORS 代理服務
+      const proxyUrl = 'https://proxy.cors.sh/https://image.ziyuansousou.com/api/rfile/1151bb006e31fad4ea3ed81ff68f6245ccc4c3f0e0e17c47956e3643f944a904.html'
+
+      try {
+        // 1. Fetch 獲取 HTML 純文字
+        const response = await fetch(proxyUrl);
+        if (!response.ok) throw new Error('網絡請求失敗');
+        const htmlText = await response.text();
+
+        // 2. 利用 DOMParser 把字串解析成 DOM 樹
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlText, 'text/html');
+
+        // 3. 獲取所有的 h2 標籤
+        const h2Elements = doc.querySelectorAll('h2');
+        const tocList = document.getElementById('toc-list');
+        tocList.innerHTML = ''; // 清空載入提示
+
+        if (h2Elements.length === 0) {
+          tocList.innerHTML = '<li>鎖定章節失敗</li>';
+        }
+
+        // 4. 為每個 H2 添加 ID 並生成目錄索引
+        h2Elements.forEach((h2, index) => {
+          // 如果目標頁面的 h2 沒有 id，我們幫它建立一個
+          const sectionId = h2.id || `h2-index-${index}`;
+          h2.id = sectionId;
+
+          // 創建目錄連結項 (<a>)
+          const li = document.createElement('li');
+          const a = document.createElement('a');
+          a.href = `#${sectionId}`;
+          a.textContent = h2.textContent.trim() || `章節 ${index + 1}`;
+          
+          li.appendChild(a);
+          tocList.appendChild(li);
+        });
+
+        // 5. 將處理完（補上 ID）的內容渲染到前端頁面上
+        // 如果你只想顯示 <body> 裡面的內容：
+        document.getElementById('content-container').innerHTML = doc.body.innerHTML;
+
+      } catch (error) {
+        console.error('載入失敗:', error);
+        document.getElementById('content-container').innerHTML = '無法加載文章。';
+      }
+    }
+
+    // 執行載入與索引
+    loadAndIndexHtml();
+  </script>
+
+</body>
+</html>
